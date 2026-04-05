@@ -1,0 +1,5 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { ArrowUpRight } from 'lucide-react'; // Using Lucide icon for the arrow
+export function KpiCard({ title, value, delta, deltaPositive, light, blueArrow }) {
+    return (_jsxs("div", { className: `rounded-[24px] p-6 flex flex-col justify-between shadow-sm min-h-[140px] transition-transform hover:-translate-y-1 ${light ? 'bg-white' : 'bg-[#e6e6e6]'}`, children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsx("span", { className: "text-[14px] font-medium text-gray-600 tracking-wide", children: title }), _jsx("div", { className: `w-8 h-8 rounded-full flex items-center justify-center ${blueArrow ? 'bg-blue-600 text-white' : 'bg-[#333] text-white'}`, children: _jsx(ArrowUpRight, { size: 16, strokeWidth: 2.5 }) })] }), _jsxs("div", { children: [_jsx("div", { className: "text-[36px] font-semibold text-gray-900 tracking-tight leading-none mt-3", children: value }), delta && (_jsx("span", { className: `text-[12px] font-medium mt-2 inline-block tracking-wide ${deltaPositive ? 'text-emerald-500' : 'text-rose-500'}`, children: delta }))] })] }));
+}

@@ -108,7 +108,7 @@ export function SettingsScreen() {
                       key={accent.name}
                       onClick={() => setActiveAccent(accent.color)}
                       className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${activeAccent === accent.color ? 'ring-4 ring-offset-2 scale-110' : 'hover:scale-105'}`}
-                      style={{ backgroundColor: accent.color, ringColor: accent.color }}
+                      style={{ backgroundColor: accent.color, '--tw-ring-color': accent.color } as React.CSSProperties}
                       title={accent.name}
                     >
                       {activeAccent === accent.color && <Check size={20} color="white" strokeWidth={3} />}

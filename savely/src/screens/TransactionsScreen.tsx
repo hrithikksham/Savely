@@ -39,7 +39,8 @@ export function TransactionsScreen({ role = 'editor' }: { role?: UserRole }) {
       <div className="bg-white rounded-[24px] flex-1 shadow-sm overflow-hidden p-2">
         <TransactionsTable
           data={transactions}
-          role={role} // 3. PASS ROLE TO TABLE
+          role={role}
+          onAdd={() => setIsAddOpen(true)}
           onEdit={(t) => setEditing(t)}
         />
       </div>
