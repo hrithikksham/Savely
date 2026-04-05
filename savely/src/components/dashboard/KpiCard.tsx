@@ -1,35 +1,40 @@
-import { ArrowBtn } from '../ui/primitives';
-import { clsx } from 'clsx';
+import { ArrowUpRight } from 'lucide-react'; // Using Lucide icon for the arrow
 
 interface KpiCardProps {
   title: string;
   value: string;
   delta?: string;
   deltaPositive?: boolean;
-  dark?: boolean;
+  light?: boolean;
   blueArrow?: boolean;
 }
 
-export function KpiCard({ title, value, delta, deltaPositive, dark, blueArrow }: KpiCardProps) {
+export function KpiCard({ title, value, delta, deltaPositive, light, blueArrow }: KpiCardProps) {
   return (
-    <div className={clsx(
-      'rounded-2xl p-5 flex flex-col gap-3',
-      dark ? 'bg-[#2a2a2a]' : 'bg-[#f0f0f0]'
-    )}>
+    <div className={`rounded-[24px] p-6 flex flex-col justify-between shadow-sm min-h-[140px] transition-transform hover:-translate-y-1 ${light ? 'bg-white' : 'bg-[#e6e6e6]'}`}>
+      
+      {/* Header: Title and Arrow */}
       <div className="flex items-center justify-between">
-        <span className={clsx('text-sm font-medium', dark ? 'text-gray-300' : 'text-gray-700')}>
+        <span className="text-[14px] font-medium text-gray-600 tracking-wide">
           {title}
         </span>
-        <ArrowBtn blue={blueArrow} />
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${blueArrow ? 'bg-blue-600 text-white' : 'bg-[#333] text-white'}`}>
+          <ArrowUpRight size={16} strokeWidth={2.5} />
+        </div>
       </div>
-      <div className={clsx('text-3xl font-semibold', dark ? 'text-white' : 'text-gray-900')}>
-        {value}
+      
+      {/* Footer: Value and Delta */}
+      <div>
+        <div className="text-[36px] font-semibold text-gray-900 tracking-tight leading-none mt-3">
+          {value}
+        </div>
+        {delta && (
+          <span className={`text-[12px] font-medium mt-2 inline-block tracking-wide ${deltaPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+            {delta}
+          </span>
+        )}
       </div>
-      {delta && (
-        <span className={clsx('text-xs font-medium', deltaPositive ? 'text-green-500' : 'text-red-400')}>
-          {delta}
-        </span>
-      )}
+
     </div>
   );
 }

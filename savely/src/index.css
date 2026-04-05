@@ -1,26 +1,12 @@
-@import "tailwindcss";
-
-* {
-  box-sizing: border-box;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 html, body, #root {
-  height: 100%;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #555; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
-}
-.modal-animate {
-  animation: fadeIn 0.15s ease-out;
+  width: 100%;
+  height: 100%;
+  background-color: #2e2e2e; /* Your dark theme background */
+  font-family: system-ui, -apple-system, sans-serif;
 }

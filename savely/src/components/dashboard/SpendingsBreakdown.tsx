@@ -1,65 +1,105 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import type { CategoryBreakdown } from '../../types';
-import { ArrowBtn } from '../ui/primitives';
+import { ArrowUpRight } from 'lucide-react';
 
-interface SpendingsBreakdownProps {
-  data: CategoryBreakdown[];
+interface BreakdownItem {
+  category: string;
+  amount: number;
+  percentage: number;
+  color: string;
 }
 
-export function SpendingsBreakdown({ data }: SpendingsBreakdownProps) {
-  const top4 = data.slice(0, 4);
+export function SpendingsBreakdown({ data = [] }: { data?: BreakdownItem[] }) {
+  // SVG Math for the Donut Chart
+  const radius = 14;
+  const circumference = 2 * Math.PI * radius;
+  let currentOffset = 0;
+
+  // Take only the top 4 categories so the legend fits perfectly in the Dashboard card
+  const displayData = data.slice(0, 4);
 
   return (
-    <div className="bg-white rounded-2xl p-5 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <span className="text-gray-900 font-medium">Spendings Breakdown</span>
-        <ArrowBtn />
+    <div className="flex flex-col h-full">
+      
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-gray-900 text-[18px] font-medium tracking-tight">
+          Spendings Breakdown
+        </h2>
+        <button className="w-8 h-8 rounded-full bg-[#f4f4f4] flex items-center justify-center text-gray-800 hover:bg-[#e6e6e6] transition-colors">
+          <ArrowUpRight size={16} strokeWidth={2.5} />
+        </button>
       </div>
-      <div className="flex items-center gap-4">
-        {/* Donut */}
-        <div className="w-28 h-28 shrink-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={top4.length ? top4 : [{ amount: 1, color: '#e5e7eb' }]}
-                dataKey="amount"
-                cx="50%"
-                cy="50%"
-                innerRadius="60%"
-                outerRadius="90%"
-                strokeWidth={0}
-              >
-                {(top4.length ? top4 : [{ color: '#e5e7eb' }]).map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{ background: '#2a2a2a', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12 }}
-                formatter={(v) => {
-                    if (typeof v === 'number') {
-                        return `₹${v.toLocaleString('en-IN')}`;
-                    }
-                    return v;
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+
+      {/* ── Chart & Legend Container ────────────────────────────────────── */}
+      <div className="flex items-center justify-center gap-8 flex-1 w-full px-4">
+        
+        {/* Donut Chart (SVG) */}
+        <div className="w-[140px] h-[140px] shrink-0 relative">
+          <svg viewBox="0 0 32 32" className="w-full h-full -rotate-90 transform drop-shadow-sm">
+            {/* Background Track */}
+            <circle 
+              cx="16" cy="16" r={radius} 
+              fill="none" stroke="#f4f4f4" strokeWidth="4" 
+            />
+            
+            {/* Colored Slices */}
+            {displayData.map((item, idx) => {
+              const strokeLength = (item.percentage / 100) * circumference;
+              
+              // Add a 1px gap between slices if the slice is large enough to see
+              const gap = strokeLength > 2 ? 1 : 0; 
+              const dasharray = `${Math.max(0, strokeLength - gap)} ${circumference}`;
+              const dashoffset = -currentOffset;
+              
+              currentOffset += strokeLength;
+
+              return (
+                <circle
+                  key={idx}
+                  cx="16"
+                  cy="16"
+                  r={radius}
+                  fill="none"
+                  stroke={item.color || '#94a3b8'}
+                  strokeWidth="4"
+                  strokeDasharray={dasharray}
+                  strokeDashoffset={dashoffset}
+                  className="transition-all duration-1000 ease-out origin-center"
+                />
+              );
+            })}
+          </svg>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-col gap-2 flex-1">
-          {top4.map((item) => (
-            <div key={item.category} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: item.color }} />
-                <span className="text-gray-600 text-xs">{item.category}</span>
+        {/* Legend List */}
+        <div className="flex flex-col justify-center gap-4 flex-1">
+          {displayData.map((item, idx) => (
+            <div key={idx} className="flex items-center justify-between text-[13px]">
+              <div className="flex items-center gap-3">
+                {/* Square Color Indicator */}
+                <div 
+                  className="w-2.5 h-2.5 rounded-[2px]" 
+                  style={{ backgroundColor: item.color || '#94a3b8' }} 
+                />
+                <span className="text-gray-600 font-medium tracking-wide">
+                  {item.category}
+                </span>
               </div>
-              <span className="text-gray-800 text-xs font-medium">
+              <span className="text-gray-900 font-bold tracking-wide">
                 ₹{item.amount.toLocaleString('en-IN')}
               </span>
             </div>
           ))}
+          
+          {/* Optional: Show "Other" if there are more than 4 categories */}
+          {data.length > 4 && (
+            <div className="flex items-center justify-between text-[13px] opacity-50 mt-1">
+              <span className="text-gray-600 font-medium tracking-wide pl-5">
+                + {data.length - 4} more
+              </span>
+            </div>
+          )}
         </div>
+
       </div>
     </div>
   );

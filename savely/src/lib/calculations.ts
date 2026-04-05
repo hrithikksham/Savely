@@ -70,6 +70,7 @@ export function computeBalanceTrend(transactions: Transaction[]): BalanceTrendPo
 
 export function computeInsights(transactions: Transaction[]): InsightsSummary {
   const now = new Date();
+  
   const thisMonth = transactions.filter(t => isSameMonth(parseISO(t.date), now));
   const lastMonth = transactions.filter(t => isSameMonth(parseISO(t.date), subMonths(now, 1)));
 
@@ -77,9 +78,15 @@ export function computeInsights(transactions: Transaction[]): InsightsSummary {
   const lastExpenses = lastMonth.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const monthlyComparison = thisExpenses - lastExpenses;
 
-  const breakdown = computeCategoryBreakdown(transactions);
-  const { income, expenses: avgMonthlyExpense, savingsRate } = computeTotals(transactions);
-  const highestSpending = breakdown[0]?.category ?? 'Rent';
+  const breakdown = computeCategoryBreakdown(thisMonth);
+  const highestSpending = breakdown[0]?.category ?? 'N/A';
+
+  const uniqueMonths = new Set(transactions.map(t => t.date.substring(0, 7))).size || 1;
+  const { expenses: totalLifetimeExpenses } = computeTotals(transactions);
+  const avgMonthlyExpense = totalLifetimeExpenses / uniqueMonths;
+
+  // Calculate Savings Rate based on this month's performance
+  const { savingsRate } = computeTotals(thisMonth); 
 
   return {
     monthlyComparison,

@@ -1,52 +1,74 @@
-import { Home, List, BarChart2, Settings, Eye, LogOut } from 'lucide-react';
-import { clsx } from 'clsx';
+import { Home, Menu, BarChart2, Settings, Eye, LogOut } from 'lucide-react';
 
-interface SidebarProps {
-  active: string;
-  onNavigate: (route: string) => void;
-}
-
-const TOP_NAV = [
-  { icon: Home,     label: 'Dashboard',    route: '/' },
-  { icon: List,     label: 'Transactions', route: '/transactions' },
-  { icon: BarChart2,label: 'Insights',     route: '/insights' },
-  { icon: Settings, label: 'Settings',     route: '/settings' },
+const NAV = [
+  { icon: Home,      label: 'Dashboard',    route: '/' },
+  { icon: Menu,      label: 'Transactions', route: '/transactions' },
+  { icon: BarChart2, label: 'Insights',     route: '/insights' },
+  { icon: Settings,  label: 'Settings',     route: '/settings' },
 ];
 
-export function Sidebar({ active, onNavigate }: SidebarProps) {
+export function Sidebar({ active, onNavigate }: { active: string; onNavigate: (r: string) => void }) {
   return (
-    <aside className="flex flex-col items-center py-4 gap-3 shrink-0 rounded-2xl" style={{ width: 64, background: '#e8e8e8' }}>
-      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: '#c8c8c8' }}>
-        <div className="w-5 h-5 rounded-full" style={{ background: '#888' }} />
+    <aside style={{
+      width: 80, background: '#e0e0e0', borderRadius: 100,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      padding: '24px 0 20px', gap: 12, flexShrink: 0,
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      {/* Top Logo / Avatar */}
+      <div style={{ 
+        width: 48, height: 48, borderRadius: '50%', 
+        background: 'linear-gradient(135deg, #444, #888)', 
+        marginBottom: 8 
+      }} />
+      <span style={{ fontSize: 13, fontWeight: 600, color: '#333', letterSpacing: 0.5, marginBottom: 4 }}>Savely</span>
+      <div style={{ width: 40, height: 1, background: '#ccc', margin: '4px 0 12px' }} />
+
+      {/* Nav icons */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {NAV.map(({ icon: Icon, label, route }) => (
+          <button
+            key={route} title={label}
+            onClick={() => onNavigate(route)}
+            style={{
+              width: 48, height: 48, borderRadius: 16, border: 'none', cursor: 'pointer',
+              background: active === route ? 'white' : 'transparent',
+              color: active === route ? '#222' : '#777',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: active === route ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { if (active !== route) (e.currentTarget as HTMLElement).style.color = '#333'; }}
+            onMouseLeave={e => { if (active !== route) (e.currentTarget as HTMLElement).style.color = '#777'; }}
+          >
+            <Icon size={22} strokeWidth={active === route ? 2.5 : 2} />
+          </button>
+        ))}
       </div>
-      <span className="text-gray-500 font-semibold tracking-wide" style={{ fontSize: 10 }}>Savely</span>
-      <div className="w-6 mb-1" style={{ height: 1, background: '#bbb' }} />
 
-      {TOP_NAV.map(({ icon: Icon, label, route }) => (
-        <button
-          key={route}
-          title={label}
-          onClick={() => onNavigate(route)}
-          className={clsx(
-            'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-150 cursor-pointer border-0',
-            active === route
-              ? 'bg-white text-gray-800 shadow-sm'
-              : 'text-gray-500 hover:bg-white/70 hover:text-gray-800'
-          )}
-          style={{ background: active === route ? 'white' : undefined }}
-        >
-          <Icon size={18} />
+      <div style={{ flex: 1 }} />
+
+      {/* Bottom buttons */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+        <button style={{
+          width: 48, height: 48, borderRadius: 24, background: '#999', border: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+        }}>
+          <Eye size={20} color="white" />
         </button>
-      ))}
-
-      <div className="flex-1" />
-
-      <button title="Preview" className="w-10 h-10 rounded-xl flex items-center justify-center text-white cursor-pointer" style={{ background: '#666' }}>
-        <Eye size={16} />
-      </button>
-      <button title="Logout" className="w-10 h-10 rounded-xl flex items-center justify-center text-gray-500 hover:bg-white/70 transition-all cursor-pointer border-0">
-        <LogOut size={18} />
-      </button>
+        
+        <button
+          style={{ 
+            width: 48, height: 48, borderRadius: 16, border: 'none', 
+            background: 'transparent', cursor: 'pointer', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555' 
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#000'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#555'; }}
+        >
+          <LogOut size={22} />
+        </button>
+      </div>
     </aside>
   );
 }

@@ -1,133 +1,52 @@
 import React from 'react';
-import { clsx } from 'clsx';
 
-// ─── Card ─────────────────────────────────────────────────────────────────────
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  dark?: boolean;
-}
-export function Card({ dark, className, children, ...props }: CardProps) {
+// ── Arrow Button ──────────────────────────────────────────────────────────────
+export function ArrowBtn({ blue }: { blue?: boolean }) {
   return (
-    <div
-      className={clsx(
-        'rounded-2xl p-5',
-        dark ? 'bg-[#2a2a2a] text-white' : 'bg-white text-gray-900',
-        className
-      )}
-      {...props}
-    >
-      {children}
+    <div style={{
+      width: 34, height: 34, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
+      background: blue ? '#3B82F6' : '#1a1a1a',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M2 12L12 2M12 2H5M12 2V9" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
     </div>
   );
 }
 
-// ─── Badge ────────────────────────────────────────────────────────────────────
-const BADGE_VARIANTS: Record<string, string> = {
-  income:         'bg-green-100 text-green-700',
-  expense:        'bg-red-100 text-red-600',
-  Rent:           'bg-red-100 text-red-500',
-  Shopping:       'bg-pink-100 text-pink-600',
-  'Food & Dining':'bg-purple-100 text-purple-600',
-  Transportation: 'bg-blue-100 text-blue-600',
-  Healthcare:     'bg-orange-100 text-orange-600',
-  Utilities:      'bg-lime-100 text-lime-700',
-  Entertainment:  'bg-emerald-100 text-emerald-600',
-  Salary:         'bg-teal-100 text-teal-600',
-  Freelance:      'bg-sky-100 text-sky-600',
-  Investment:     'bg-yellow-100 text-yellow-700',
-  Other:          'bg-gray-100 text-gray-600',
+// ── Badge ─────────────────────────────────────────────────────────────────────
+const BADGE: Record<string, { bg: string; color: string }> = {
+  income:          { bg: '#dcfce7', color: '#16a34a' },
+  expense:         { bg: '#fee2e2', color: '#dc2626' },
+  Rent:            { bg: '#fee2e2', color: '#ef4444' },
+  Shopping:        { bg: '#fce7f3', color: '#db2777' },
+  'Food & Dining': { bg: '#f3e8ff', color: '#9333ea' },
+  Transportation:  { bg: '#dbeafe', color: '#2563eb' },
+  Healthcare:      { bg: '#ffedd5', color: '#ea580c' },
+  Utilities:       { bg: '#ecfccb', color: '#65a30d' },
+  Entertainment:   { bg: '#d1fae5', color: '#059669' },
+  Salary:          { bg: '#ccfbf1', color: '#0d9488' },
+  Freelance:       { bg: '#e0f2fe', color: '#0284c7' },
+  Investment:      { bg: '#fef9c3', color: '#ca8a04' },
+  Other:           { bg: '#f1f5f9', color: '#64748b' },
 };
 
-interface BadgeProps {
-  label: string;
-  variant?: string;
-}
-export function Badge({ label, variant }: BadgeProps) {
-  const cls = BADGE_VARIANTS[variant ?? label] ?? 'bg-gray-100 text-gray-600';
+export function Badge({ label, variant }: { label: string; variant?: string }) {
+  const key = variant ?? label;
+  const { bg, color } = BADGE[key] ?? { bg: '#f1f5f9', color: '#64748b' };
   return (
-    <span className={clsx('px-3 py-1 rounded-full text-xs font-medium', cls)}>
+    <span style={{
+      background: bg, color, padding: '3px 10px',
+      borderRadius: 999, fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap' as const,
+      display: 'inline-block',
+    }}>
       {label}
     </span>
   );
 }
 
-// ─── Button ───────────────────────────────────────────────────────────────────
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'ghost' | 'danger';
-  size?: 'sm' | 'md';
-}
-export function Button({ variant = 'primary', size = 'md', className, children, ...props }: ButtonProps) {
-  return (
-    <button
-      className={clsx(
-        'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150',
-        size === 'sm' ? 'px-3 py-1.5 text-sm' : 'px-4 py-2 text-sm',
-        variant === 'primary' && 'bg-blue-500 text-white hover:bg-blue-600',
-        variant === 'ghost'   && 'bg-transparent text-gray-500 hover:bg-gray-100',
-        variant === 'danger'  && 'bg-transparent text-red-400 hover:text-red-600',
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-
-// ─── Input ────────────────────────────────────────────────────────────────────
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  dark?: boolean;
-}
-export function Input({ dark, className, ...props }: InputProps) {
-  return (
-    <input
-      className={clsx(
-        'w-full rounded-xl px-4 py-2 text-sm outline-none transition-all',
-        dark
-          ? 'bg-[#1e1e1e] text-white placeholder-gray-500 border border-transparent focus:border-blue-500'
-          : 'bg-gray-100 text-gray-900 placeholder-gray-400 border border-transparent focus:border-blue-400',
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-// ─── Select ───────────────────────────────────────────────────────────────────
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  dark?: boolean;
-}
-export function Select({ dark, className, children, ...props }: SelectProps) {
-  return (
-    <select
-      className={clsx(
-        'rounded-xl px-3 py-2 text-sm outline-none cursor-pointer transition-all',
-        dark
-          ? 'bg-[#1e1e1e] text-white border border-transparent focus:border-blue-500'
-          : 'bg-gray-100 text-gray-800 border border-transparent focus:border-blue-400',
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </select>
-  );
-}
-
-// ─── Arrow button (dashboard cards) ──────────────────────────────────────────
-interface ArrowBtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  blue?: boolean;
-}
-export function ArrowBtn({ blue, className, ...props }: ArrowBtnProps) {
-  return (
-    <button
-      className={clsx(
-        'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all',
-        blue ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-800 text-white hover:bg-gray-700',
-        className
-      )}
-      {...props}
-    >
-      ↗
-    </button>
-  );
+// ── Card ──────────────────────────────────────────────────────────────────────
+export function Card({ style, children }: { style?: React.CSSProperties; children: React.ReactNode }) {
+  return <div style={{ borderRadius: 16, padding: 20, ...style }}>{children}</div>;
 }
