@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useReactTable, getCoreRowModel, getPaginationRowModel, createColumnHelper, flexRender } from '@tanstack/react-table';
 import { Pencil, Trash2, Search, Plus, ChevronLeft, ChevronRight, Download } from 'lucide-react';
-import { Transaction, FilterType } from '../../types';
+import type { Transaction, FilterType } from '../../types';
+import type { UserRole } from '../layout/Sidebar';
 import { Badge } from '../ui/primitives';
 import { ALL_CATEGORIES } from '../../lib/data';
 import { formatDate, formatCurrency } from '../../lib/calculations';
@@ -11,14 +12,21 @@ const col = createColumnHelper<Transaction>();
 
 function useDebounce<T>(value: T, ms: number): T {
   const [v, setV] = useState(value);
-  React.useEffect(() => { const id = setTimeout(() => setV(value), ms); return () => clearTimeout(id); }, [value, ms]);
+  React.useEffect(() => { 
+    const id = setTimeout(() => setV(value), ms); 
+    return () => clearTimeout(id); 
+  }, [value, ms]);
   return v;
 }
 
-const sel: React.CSSProperties = { background:'#2a2a2a', color:'#ccc', border:'1px solid #3a3a3a', borderRadius:999, padding:'7px 14px', fontSize:13, cursor:'pointer', outline:'none', fontFamily:'inherit' };
-const inp: React.CSSProperties = { background:'#1e1e1e', color:'white', border:'none', borderRadius:999, padding:'7px 14px 7px 36px', fontSize:13, outline:'none', width:'100%', fontFamily:'inherit' };
+interface TableProps {
+  data: Transaction[];
+  onAdd: () => void;
+  onEdit: (t: Transaction) => void;
+  role?: UserRole; // 1. Accept Role Prop
+}
 
-export function TransactionsTable({ data, onAdd, onEdit }: { data: Transaction[]; onAdd: () => void; onEdit: (t: Transaction) => void }) {
+export function TransactionsTable({ data, onAdd, onEdit, role = 'editor' }: TableProps) {
   const [search, setSearch]         = useState('');
   const [typeFilter, setTypeFilter] = useState<FilterType>('all');
   const [catFilter, setCatFilter]   = useState('all');
@@ -32,24 +40,66 @@ export function TransactionsTable({ data, onAdd, onEdit }: { data: Transaction[]
     return ms && mt && mc;
   }), [data, q, typeFilter, catFilter]);
 
-  const columns = useMemo(() => [
-    col.accessor('date',        { header:'Date',        cell: i => <span style={{ color:'#aaa', fontSize:13 }}>{formatDate(i.getValue())}</span> }),
-    col.accessor('description', { header:'Description', cell: i => <span style={{ fontWeight:500, fontSize:14 }}>{i.getValue()}</span> }),
-    col.accessor('category',    { header:'Category',    cell: i => <Badge label={i.getValue()} /> }),
-    col.accessor('type',        { header:'Type',        cell: i => <Badge label={i.getValue()} variant={i.getValue()} /> }),
-    col.accessor('amount', { header:'Amount', cell: i => {
-      const t = i.row.original;
-      return <span style={{ fontWeight:600, fontSize:13, color: t.type==='income' ? '#22c55e' : '#ef4444' }}>{t.type==='income'?'+':'-'}{formatCurrency(i.getValue())}</span>;
-    }}),
-    col.display({ id:'actions', header:'Actions', cell: i => (
-      <div style={{ display:'flex', gap:12 }}>
-        <button onClick={() => onEdit(i.row.original)} style={{ background:'none', border:'none', cursor:'pointer', color:'#888', padding:0 }}><Pencil size={15} /></button>
-        <button onClick={() => del.mutate(i.row.original.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'#888', padding:0 }}><Trash2 size={15} /></button>
-      </div>
-    )}),
-  ], [onEdit, del]);
+const columns = useMemo(() => {
+    return [
+      col.accessor('date', { 
+        header: 'Date', 
+        cell: i => <span className="text-gray-400 text-[13px] font-medium">{formatDate(i.getValue())}</span> 
+      }),
+      col.accessor('description', { 
+        header: 'Description', 
+        cell: i => <span className="text-gray-800 font-medium text-[14px]">{i.getValue()}</span> 
+      }),
+      col.accessor('category', { 
+        header: 'Category', 
+        cell: i => <Badge label={i.getValue()} /> 
+      }),
+      col.accessor('type', { 
+        header: 'Type', 
+        cell: i => <Badge label={i.getValue()} variant={i.getValue()} /> 
+      }),
+      col.accessor('amount', { 
+        header: 'Amount', 
+        cell: i => {
+          const t = i.row.original;
+          const isIncome = t.type === 'income';
+          return (
+            <span className={`font-bold text-[13px] ${isIncome ? 'text-emerald-500' : 'text-rose-500'}`}>
+              {isIncome ? '+' : '-'} {formatCurrency(i.getValue())}
+            </span>
+          );
+        }
+      }),
+      
+      // ── FIXED: Conditional Spread instead of .push() ──
+      ...(role === 'editor' ? [
+        col.display({ 
+          id: 'actions', 
+          header: () => <div className="text-center">Actions</div>, 
+          cell: i => (
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => onEdit(i.row.original)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <Pencil size={16} strokeWidth={2.5} />
+              </button>
+              <button onClick={() => del.mutate(i.row.original.id)} className="text-rose-400 hover:text-rose-600 transition-colors">
+                <Trash2 size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+          )
+        })
+      ] : [])
+      
+    ];
+  }, [onEdit, del, role]);
 
-  const table = useReactTable({ data: filtered, columns, getCoreRowModel: getCoreRowModel(), getPaginationRowModel: getPaginationRowModel(), initialState: { pagination: { pageSize:8 } } });
+  const table = useReactTable({ 
+    data: filtered, 
+    columns, 
+    getCoreRowModel: getCoreRowModel(), 
+    getPaginationRowModel: getPaginationRowModel(), 
+    initialState: { pagination: { pageSize: 10 } } // 3. Set pagination to 10
+  });
+  
   const { pageIndex } = table.getState().pagination;
 
   function exportCsv() {
@@ -61,75 +111,121 @@ export function TransactionsTable({ data, onAdd, onEdit }: { data: Transaction[]
   }
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:24, flex:1 }}>
-      {/* Filter bar */}
-      <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' , right:10}}>
-        <div style={{ position:'relative', flex:1, maxWidth:280 }}>
-          <Search size={14} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'#666' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search" style={inp} />
+    <div className="flex flex-col gap-6 flex-1">
+      
+      {/* ── Filter Bar ────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between flex-wrap gap-4 w-full">
+        <div className="flex items-center gap-4 flex-1">
+          {/* Search */}
+          <div className="relative w-full max-w-[280px]">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input 
+              value={search} 
+              onChange={e => setSearch(e.target.value)} 
+              placeholder="Search" 
+              className="w-full bg-black text-gray-300 placeholder-gray-500 rounded-full pl-10 pr-4 py-2.5 text-[14px] outline-none"
+            />
+          </div>
+
+          {/* Type Filter */}
+          <select 
+            value={typeFilter} 
+            onChange={e => setTypeFilter(e.target.value as FilterType)} 
+            className="bg-[#2a2a2a] text-gray-300 px-4 py-2.5 rounded-[12px] text-[14px] border border-transparent hover:border-[#444] transition-colors outline-none cursor-pointer"
+          >
+            <option value="all">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+
+          {/* Category Filter */}
+          <select 
+            value={catFilter} 
+            onChange={e => setCatFilter(e.target.value)} 
+            className="bg-[#2a2a2a] text-gray-300 px-4 py-2.5 rounded-[12px] text-[14px] border border-transparent hover:border-[#444] transition-colors outline-none cursor-pointer"
+          >
+            <option value="all">All Categories</option>
+            {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as FilterType)} style={sel}>
-          <option value="all">All Types</option>
-          <option value="income">Income</option>
-          <option value="expense">Expense</option>
-        </select>
-        <select value={catFilter} onChange={e => setCatFilter(e.target.value)} style={sel}>
-          <option value="all">All Categories</option>
-          {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <div style={{ flex:1 }} />
-        <button onClick={exportCsv} style={{ ...sel, display:'flex', alignItems:'center', gap:6, borderRadius:12 }}>
-          <Download size={14} /> csv
-        </button>
-        <button onClick={onAdd} style={{ display:'flex', alignItems:'center', gap:6, background:'#3B82F6', color:'white', border:'none', borderRadius:12, padding:'7px 16px', fontSize:13, fontWeight:500, cursor:'pointer' }}>
-          <Plus size={14} /> Add
-        </button>
+
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={exportCsv} 
+            className="flex items-center gap-2 bg-[#2a2a2a] text-gray-300 px-5 py-2.5 rounded-[12px] text-[14px] hover:bg-[#333] transition-colors"
+          >
+            <Download size={16} /> csv
+          </button>
+          
+          {/* 4. ROLE CHECK: Hide Add button if Viewer */}
+          {role === 'editor' && (
+            <button 
+              onClick={onAdd} 
+              className="flex items-center gap-2 bg-[#1d4ed8] hover:bg-blue-600 text-white px-6 py-2.5 rounded-full text-[14px] font-medium transition-colors"
+            >
+              <Plus size={18} strokeWidth={2.5} /> Add
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Table */}
-      <div style={{ background:'white', borderRadius:16, overflow:'hidden', flex:1 }}>
-        <div style={{ overflowX:'auto' }}>
-          <table style={{ width:'100%', borderCollapse:'collapse' }}>
+      {/* ── Table Area ────────────────────────────────────────────────── */}
+      <div className="bg-white rounded-[24px] overflow-hidden flex-1 shadow-sm p-2">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
-              <tr style={{ borderBottom:'1px solid #f0f0f0' }}>
+              <tr className="border-b border-gray-100">
                 {table.getHeaderGroups()[0].headers.map(h => (
-                  <th key={h.id} style={{ padding:'12px 20px', textAlign:'left', fontSize:12, color:'#aaa', fontWeight:500, whiteSpace:'nowrap' }}>
+                  <th key={h.id} className="px-6 py-5 text-gray-400 font-medium text-[13px]">
                     {flexRender(h.column.columnDef.header, h.getContext())}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
-              {table.getRowModel().rows.length === 0
-                ? <tr><td colSpan={6} style={{ textAlign:'center', padding:48, color:'#aaa', fontSize:14 }}>No transactions found.</td></tr>
-                : table.getRowModel().rows.map(row => (
-                  <tr key={row.id} style={{ borderBottom:'1px solid #fafafa' }}
-                    onMouseEnter={e => (e.currentTarget.style.background='#fafafa')}
-                    onMouseLeave={e => (e.currentTarget.style.background='transparent')}
-                  >
+            <tbody className="divide-y divide-gray-50">
+              {table.getRowModel().rows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-gray-400 text-sm">
+                    No transactions found.
+                  </td>
+                </tr>
+              ) : (
+                table.getRowModel().rows.map(row => (
+                  <tr key={row.id} className="hover:bg-gray-50/50 transition-colors">
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} style={{ padding:'12px 20px', whiteSpace:'nowrap' }}>
+                      <td key={cell.id} className="px-6 py-4">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
                   </tr>
                 ))
-              }
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Pagination */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:8 }}>
-        <span style={{ color:'#aaa', fontSize:13 }}>{pageIndex+1}/{table.getPageCount()||1}</span>
-        <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} style={{ width:32, height:32, borderRadius:'50%', background:'#2a2a2a', border:'none', cursor:'pointer', color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center', opacity: table.getCanPreviousPage()?1:0.3 }}>
-          <ChevronLeft size={14} />
-        </button>
-        <button onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} style={{ width:32, height:32, borderRadius:'50%', background:'#2a2a2a', border:'none', cursor:'pointer', color:'#ccc', display:'flex', alignItems:'center', justifyContent:'center', opacity: table.getCanNextPage()?1:0.3 }}>
-          <ChevronRight size={14} />
-        </button>
+      {/* ── Pagination ────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-end gap-4 text-gray-300 text-[14px] mr-2">
+        <span>{pageIndex + 1} / {table.getPageCount() || 1}</span>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => table.previousPage()} 
+            disabled={!table.getCanPreviousPage()} 
+            className="w-9 h-9 rounded-full bg-[#e6e6e6] flex items-center justify-center text-gray-800 hover:bg-white disabled:opacity-30 disabled:hover:bg-[#e6e6e6] transition-colors"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button 
+            onClick={() => table.nextPage()} 
+            disabled={!table.getCanNextPage()} 
+            className="w-9 h-9 rounded-full bg-[#e6e6e6] flex items-center justify-center text-gray-800 hover:bg-white disabled:opacity-30 disabled:hover:bg-[#e6e6e6] transition-colors"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
+
     </div>
   );
 }

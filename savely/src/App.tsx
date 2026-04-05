@@ -4,23 +4,49 @@ import { Sidebar } from './components/layout/Sidebar';
 import { DashboardScreen }    from './screens/DashboardScreen';
 import { TransactionsScreen } from './screens/TransactionsScreen';
 import { InsightsScreen }     from './screens/InsightsScreen';
+import { SettingsScreen }     from './screens/SettingsScreen';
+import type { UserRole }      from './components/layout/Sidebar'; 
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
-type Route = '/' | '/transactions' | '/insights';
+const queryClient = new QueryClient({ 
+  defaultOptions: { 
+    queries: { retry: 1, refetchOnWindowFocus: false } 
+  } 
+});
+
+type Route = '/' | '/transactions' | '/insights'| '/settings';
 
 function AppContent() {
   const [route, setRoute] = useState<Route>('/');
+  
+  // ── Global Role State ────────────────────────────────────────────────
+  const [role, setRole] = useState<UserRole>('editor');
+  const handleRoleToggle = () => setRole(r => r === 'editor' ? 'viewer' : 'editor');
+
+  // Route map
   const screens: Record<Route, React.ReactElement> = {
     '/':             <DashboardScreen />,
-    '/transactions': <TransactionsScreen />,
+    // Pass the role down so the screen knows whether to show Editor controls
+    '/transactions': <TransactionsScreen role={role} />, 
     '/insights':     <InsightsScreen />,
+    '/settings':     <SettingsScreen />,
   };
+
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#3a3a3a', padding: 12, gap: 12, overflow: 'hidden', boxSizing: 'border-box' }}>
-      <Sidebar active={route} onNavigate={r => setRoute(r as Route)} />
-      <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minWidth: 0, paddingRight: 4 }}>
+    <div className="flex h-screen bg-[#1e1e1e] p-3 gap-4 overflow-hidden box-border font-sans">
+      
+      {/* ── Sidebar ───────────────────────────────────────────────────── */}
+      <Sidebar 
+        active={route} 
+        onNavigate={r => setRoute(r as Route)} 
+        role={role}
+        onRoleToggle={handleRoleToggle}
+      />
+      
+      {/* ── Main Content Area ─────────────────────────────────────────── */}
+      <main className="flex-1 h-full overflow-y-auto overflow-x-hidden min-w-0 pr-2 custom-scrollbar">
         {screens[route]}
       </main>
+      
     </div>
   );
 }
