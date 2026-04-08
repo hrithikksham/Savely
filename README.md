@@ -1,6 +1,8 @@
 <div align="center">
-  <img src="https://via.placeholder.com/1200x600/1e1e1e/ffffff?text=Savely+%7C+Dashboard+Preview" alt="Savely Dashboard Preview" width="100%" style="border-radius: 12px;" />
-
+  <img src="./Savely-Dashboard-Preview.png" 
+     alt="Savely Dashboard Preview" 
+     width="100%" 
+     style="border-radius:12px;">
   <br />
   <br />
 
